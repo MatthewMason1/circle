@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Circle - New Post</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header>
+  <div class="header-container">
+    <img src="assets/logo.png" class="logo">
+  </div>
+</header>
+
+<main>
+  <h2>Create a Post</h2>
+  <input id="title" placeholder="Title"><br>
+  <textarea id="body" placeholder="Post content"></textarea><br>
+  <input type="file" id="imageFile" accept="image/*"><br>
+  <input type="file" id="mediaFile" accept="audio/*,video/*"><br>
+  <button id="submitBtn">Post</button>
+</main>
+
+<script type="module">
+import { auth, db, ref, push, uploadFile, onAuthChange } from "./js/main.js";
+
+onAuthChange(user=>{
+  if(!user) window.location.href="login.html";
+});
+
+document.getElementById("submitBtn").onclick = async ()=>{
+  const user = auth.currentUser;
+  if(!user) return;
+  const title = document.getElementById("title").value;
+  const body = document.getElementById("body").value;
+  const imageFile = document.getElementById("imageFile").files[0];
+  const mediaFile = document.getElementById("mediaFile").files[0];
+
+  let imageUrl="", mediaUrl="";
+  if(imageFile) imageUrl = await uploadFile(imageFile,"posts");
+  if(mediaFile) mediaUrl = await uploadFile(mediaFile,"posts");
+
+  const postRef = push(ref(db,"posts"));
+  await postRef.set({
+    title, body, imageUrl, mediaUrl,
+    username: user.displayName || "Anonymous",
+    uid: user.uid,
+    timestamp: Date.now()
+  });
+
+  alert("Post created!");
+  window.location.href="index.html";
+};
+</script>
+</body>
+</html>

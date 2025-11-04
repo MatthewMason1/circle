@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Circle - Profile</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header>
+  <div class="header-container">
+    <img src="assets/logo.png" class="logo">
+  </div>
+</header>
+
+<main>
+  <h2>Your Profile</h2>
+  <p>Username: <input id="usernameInput"></p>
+  <p>Profile Picture: <input type="file" id="pfpInput"></p>
+  <p>Banner: <input type="file" id="bannerInput"></p>
+  <button id="saveBtn">Save Profile</button>
+</main>
+
+<script type="module">
+import { auth, db, ref, set, get, uploadFile, onAuthChange } from "./js/main.js";
+
+const usernameInput = document.getElementById("usernameInput");
+const pfpInput = document.getElementById("pfpInput");
+const bannerInput = document.getElementById("bannerInput");
+const saveBtn = document.getElementById("saveBtn");
+
+onAuthChange(async user=>{
+  if(!user) return window.location.href="login.html";
+  const snapshot = await get(ref(db, `users/${user.uid}`));
+  const data = snapshot.val();
+  if(data){
+    usernameInput.value = data.username||"";
+  }
+});
+
+saveBtn.onclick = async ()=>{
+  const user = auth.currentUser;
+  if(!user) return;
+  let pfpUrl="", bannerUrl="";
+  if(pfpInput.files[0]) pfpUrl = await uploadFile(pfpInput.files[0],"pfp");
+  if(bannerInput.files[0]) bannerUrl = await uploadFile(bannerInput.files[0],"banner");
+
+  const updateData = { username: usernameInput.value };
+  if(pfpUrl) updateData.pfp = pfpUrl;
+  if(bannerUrl) updateData.banner = bannerUrl;
+
+  await set(ref(db, `users/${user.uid}`), updateData);
+  alert("Profile updated!");
+};
+</script>
+</body>
+</html>

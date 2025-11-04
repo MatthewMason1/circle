@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Circle - Thread</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header>
+  <div class="header-container">
+    <img src="assets/logo.png" class="logo">
+  </div>
+</header>
+
+<main>
+  <div id="postContainer"></div>
+  <h3>Comments</h3>
+  <div id="comments"></div>
+  <textarea id="commentInput" placeholder="Add a comment"></textarea><br>
+  <button id="commentBtn">Comment</button>
+</main>
+
+<script type="module">
+import { auth, db, ref, onValue, push, onAuthChange } from "./js/main.js";
+
+const urlParams = new URLSearchParams(window.location.search);
+const postId = urlParams.get("id");
+
+const postContainer = document.getElementById("postContainer");
+const commentsDiv = document.getElementById("comments");
+const commentInput = document.getElementById("commentInput");
+const commentBtn = document.getElementById("commentBtn");
+
+onAuthChange(user=>{
+  if(!user) {
+    commentInput.disabled = true;
+    commentBtn.disabled = true;
+  }
+});
+
+// Display post
+onValue(ref(db, `posts/${postId}`), snapshot=>{
+  const p = snapshot.val();
+  if(!p) return;
+  postContainer.innerHTML = `
+    <h2>${p.title}</h2>
+    <p>${p.body}</p>
+    ${p.imageUrl?`<img src="${p.imageUrl}">`:""}
+    ${p.mediaUrl?`<video controls src="${p.mediaUrl}"></video>`:""}
+    <p>By: ${p.username}</p>
+  `;
+});
+
+// Display comments
+onValue(ref(db, `comments/${postId}`), snapshot=>{
+  commentsDiv.innerHTML="";
+  const data = snapshot.val();
+  if(!data) return;
+  const sorted = Object.entries(data).sort((a,b)=>b[1].timestamp - a[1].timestamp);
+  sorted.forEach(([id,c])=>{
+    commentsDiv.innerHTML += `<div class="comment"><b>${c.username}</b>: ${c.text}</div>`;
+  });
+});
+
+// Post comment
+commentBtn.onclick = async ()=>{
+  const user = auth.currentUser;
+  if(!user) return alert("Login to comment");
+  const text = commentInput.value;
+  if(!text) return;
+  await push(ref(db, `comments/${postId}`), {
+    text, username: user.displayName||"Anonymous", uid: user.uid, timestamp: Date.now()
+  });
+  commentInput.value="";
+};
+</script>
+</body>
+</html>

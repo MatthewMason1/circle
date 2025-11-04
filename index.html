@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Circle - Kanye Forum</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header>
+  <div class="header-container">
+    <img src="assets/logo.png" alt="Circle Logo" class="logo">
+    <div class="nav-buttons">
+      <button id="signupBtn">Sign Up</button>
+      <button id="loginBtn">Login</button>
+      <button id="logoutBtn" style="display:none;">Logout</button>
+      <button id="profileBtn" style="display:none;">Profile</button>
+      <button id="newPostBtn" style="display:none;">New Post</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <h2>Forum Threads</h2>
+  <div id="threads"></div>
+</main>
+
+<script type="module">
+import { db, auth, ref, onValue, logoutUser, onAuthChange } from "./js/main.js";
+
+const signupBtn = document.getElementById("signupBtn");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const profileBtn = document.getElementById("profileBtn");
+const newPostBtn = document.getElementById("newPostBtn");
+const threads = document.getElementById("threads");
+
+// Navigation
+signupBtn.onclick = () => window.location.href = "signup.html";
+loginBtn.onclick = () => window.location.href = "login.html";
+profileBtn.onclick = () => window.location.href = "profile.html";
+newPostBtn.onclick = () => window.location.href = "post.html";
+logoutBtn.onclick = async () => await logoutUser();
+
+// Auth state
+onAuthChange(user=>{
+  if(user){
+    signupBtn.style.display = "none";
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "inline-block";
+    profileBtn.style.display = "inline-block";
+    newPostBtn.style.display = "inline-block";
+  } else {
+    signupBtn.style.display = "inline-block";
+    loginBtn.style.display = "inline-block";
+    logoutBtn.style.display = "none";
+    profileBtn.style.display = "none";
+    newPostBtn.style.display = "none";
+  }
+});
+
+// Display threads
+onValue(ref(db, "posts"), snapshot=>{
+  threads.innerHTML = "";
+  const posts = snapshot.val();
+  if(!posts) return;
+  const sorted = Object.entries(posts).sort((a,b)=>b[1].timestamp - a[1].timestamp);
+  sorted.forEach(([id, p])=>{
+    threads.innerHTML += `
+      <div class="post-card">
+        <h3>${p.title}</h3>
+        <p>${p.body}</p>
+        ${p.imageUrl?`<img src="${p.imageUrl}">`:""}
+        ${p.mediaUrl?`<video controls src="${p.mediaUrl}"></video>`:""}
+        <p>By: ${p.username}</p>
+        <a href="thread.html?id=${id}">View Thread</a>
+      </div>
+    `;
+  });
+});
+</script>
+</body>
+</html>

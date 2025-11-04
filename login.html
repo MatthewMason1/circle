@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Circle - Login</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header>
+  <div class="header-container">
+    <img src="assets/logo.png" class="logo">
+  </div>
+</header>
+
+<main>
+  <h2>Login</h2>
+  <input id="email" type="email" placeholder="Email"><br>
+  <input id="password" type="password" placeholder="Password"><br>
+  <button id="loginBtn">Login</button><br>
+  <button id="googleBtn">Login with Google</button>
+  <p>No account? <a href="signup.html">Sign Up</a></p>
+</main>
+
+<script type="module">
+import { loginUser, loginWithGoogle } from "./js/main.js";
+
+document.getElementById("loginBtn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    await loginUser(email, password);
+    window.location.href = "index.html";
+  } catch(e){ alert(e.message); }
+};
+
+document.getElementById("googleBtn").onclick = async () => {
+  try {
+    await loginWithGoogle();
+    window.location.href = "index.html";
+  } catch(e){ alert(e.message); }
+};
+</script>
+</body>
+</html>
